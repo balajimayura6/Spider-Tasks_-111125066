@@ -1,0 +1,1 @@
+python vault_sweep.py /path/to/monorepo
