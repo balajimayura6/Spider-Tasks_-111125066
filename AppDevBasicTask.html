@@ -66,8 +66,6 @@
 </div>
 
 <script>
-
-  // --- Game Setup ---
   let players = [
     { name: "You", lives: 3, score: 0, alive: true },
     { name: "Bot A", lives: 3, score: 0, alive: true }
@@ -92,8 +90,6 @@
 
       return;
     }
-
-    // Collect choices
     let choices = [];
 
     players.forEach(p => {
@@ -119,8 +115,6 @@
         }
       }
     });
-
-    // Calculate average & target
     let avg =
       choices.reduce(
         (sum, c) => sum + c.number,
@@ -128,8 +122,6 @@
       ) / choices.length;
 
     let target = avg * 0.8;
-
-    // Find winner
     let winner =
       choices.reduce((closest, c) => {
 
@@ -144,8 +136,6 @@
       });
 
     winner.player.score++;
-
-    // Lives penalty
     choices.forEach(c => {
 
       if (c.player !== winner.player) {
@@ -160,8 +150,6 @@
         }
       }
     });
-
-    // Display results
     let resultsDiv =
       document.getElementById("results");
 
@@ -173,8 +161,6 @@
       <br><strong>Target Number:</strong> ${target.toFixed(2)}
       <br><strong>Winner:</strong> ${winner.player.name}
     `;
-
-    // Display lives
     let livesDiv =
       document.getElementById("lives");
 
@@ -186,12 +172,10 @@
           : "❌ Eliminated"
         }`
       ).join("<br>");
-
-    // End state check
     if (!players[0].alive) {
 
       alert(
-        "Game Over! You lost."
+        "Game Over"
       );
 
     }
@@ -203,7 +187,7 @@
     ) {
 
       alert(
-        "Victory! You are the last player standing!"
+        "Victory."
       );
     }
   }
