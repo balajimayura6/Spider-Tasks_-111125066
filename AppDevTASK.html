@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~Labyrinth~</title>
+
+<style>
+
+body{
+    background:#111;
+    color:white;
+    font-family:Arial,sans-serif;
+    text-align:center;
+}
+
+h1{
+    color:#ff4444;
+}
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin:20px;
+    font-size:20px;
+}
+
+button{
+    padding:10px 20px;
+    font-size:18px;
+    cursor:pointer;
+    margin:5px;
+}
+
+#grid{
+    display:grid;
+    grid-template-columns:repeat(5,80px);
+    gap:3px;
+    justify-content:center;
+}
+
+.cell{
+    width:80px;
+    height:80px;
+    border:1px solid cyan;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    cursor:pointer;
+    user-select:none;
+}
+
+.hidden{
+    background:black;
+}
+
+.safe{
+    background:limegreen;
+    color:black;
+}
+
+.danger{
+    background:royalblue;
+    color:white;
+}
+
+.start{
+    background:yellowgreen;
+    color:black;
+}
+
+.exit{
+    background:red;
+    color:white;
+    box-shadow:
+        0 0 10px red,
+        0 0 20px red,
+        0 0 30px red,
+        0 0 50px red;
+}
+
+.info{
+    margin-top:20px;
+    font-size:18px;
+}
+
+</style>
+</head>
+<body>
+
+<h1>Labyrinth</h1>
+
+<div class="stats">
+    <div>Player HP: <span id="playerHP">150</span></div>
+    <div>Vecna HP: <span id="vecnaHP">5</span></div>
+    <div>Dice Roll: <span id="diceValue">-</span></div>
+</div>
+
+<button onclick="rollDice()">🎲 Roll Dice</button>
+<button onclick="restartGame()">🔄 Restart</button>
+
+<div id="grid"></div>
+
+<div class="info">
+    Good luck escaping :3
+</div>
+
+<script>
+
+const SIZE = 5;
+
+let playerHP = 150;
+let vecnaHP = 5;
+
+let currentRoll = 0;
+
+let timerStarted = false;
+let timer;
+
+const board = [];
+
+let playerPos = {
+    row:4,
+    col:4
+};
+
+const grid = document.getElementById("grid");
+
+function createBoard(){
+
+    board.length = 0;
+
+    for(let r=0;r<SIZE;r++){
+
+        board[r] = [];
+
+        for(let c=0;c<SIZE;c++){
+
+            board[r][c] = {
+                unlocked:false,
+                requirement:Math.floor(Math.random()*10)+1,
+                type:Math.random() < 0.30 ? "danger" : "safe",
+                exit:false
+            };
+        }
+    }
+
+    board[4][4].unlocked = true;
+    board[4][4].type = "start";
+
+    let exitRow;
+    let exitCol;
+
+    do{
+        exitRow = Math.floor(Math.random()*SIZE);
+        exitCol = Math.floor(Math.random()*SIZE);
+    }
+    while(exitRow===4 && exitCol===4);
+
+    board[exitRow][exitCol].exit = true;
+
+    drawBoard();
+}
+
+function drawBoard(){
+
+    grid.innerHTML = "";
+
+    for(let r=0;r<SIZE;r++){
+
+        for(let c=0;c<SIZE;c++){
+
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+
+            const block = board[r][c];
+
+            if(block.exit){
+
+                cell.classList.add("exit");
+                cell.innerHTML = "EXIT";
+
+            }
+            else if(block.unlocked){
+
+                cell.classList.add(block.type);
+
+                if(block.type==="start"){
+                    cell.innerHTML="START";
+                }
+            }
+            else{
+
+                cell.classList.add("hidden");
+                cell.innerHTML="?";
+                cell.title="Requirement: " + block.requirement;
+            }
+
+            cell.onclick = ()=>movePlayer(r,c);
+
+            grid.appendChild(cell);
+        }
+    }
+}
+
+function rollDice(){
+
+    currentRoll =
+        Math.floor(Math.random()*10)+1;
+
+    document.getElementById(
+        "diceValue"
+    ).innerText = currentRoll;
+}
+
+function startVecnaTimer(){
+
+    if(timerStarted) return;
+
+    timerStarted = true;
+
+    timer = setInterval(()=>{
+
+        vecnaHP++;
+
+        document.getElementById(
+            "vecnaHP"
+        ).innerText = vecnaHP;
+
+    },1000);
+}
+
+function movePlayer(r,c){
+
+    const distance =
+        Math.abs(playerPos.row-r)
+        +
+        Math.abs(playerPos.col-c);
+
+    if(distance !== 1){
+
+        alert(
+            "Move only to adjacent blocks"
+        );
+
+        return;
+    }
+
+    if(currentRoll === 0){
+
+        alert(
+            "Roll the dice first"
+        );
+
+        return;
+    }
+
+    startVecnaTimer();
+
+    const block = board[r][c];
+
+    if(!block.unlocked){
+
+        if(currentRoll >= block.requirement){
+
+            block.unlocked = true;
+
+            if(block.type === "danger"){
+
+                playerHP--;
+
+                document.getElementById(
+                    "playerHP"
+                ).innerText = playerHP;
+
+                alert(
+                    "-1 HP (Upside Down)"
+                );
+            }
+
+        }else{
+
+            alert(
+                "Failed!\nRequired: "
+                + block.requirement +
+                "\nRolled: "
+                + currentRoll
+            );
+
+            currentRoll = 0;
+
+            document.getElementById(
+                "diceValue"
+            ).innerText = "-";
+
+            return;
+        }
+    }
+
+    
+    playerPos.row = r;
+    playerPos.col = c;
+
+    currentRoll = 0;
+
+    document.getElementById(
+        "diceValue"
+    ).innerText = "-";
+
+    drawBoard();
+
+    if(block.exit){
+
+        clearInterval(timer);
+
+        if(playerHP > vecnaHP){
+
+            alert(
+                "YOU WIN!\n\n" +
+                "Player HP: " + playerHP +
+                "\nVecna HP: " + vecnaHP
+            );
+
+        }else{
+
+            alert(
+                "GAME OVER\n\n" +
+                "Player HP: " + playerHP +
+                "\nVecna HP: " + vecnaHP
+            );
+        }
+    }
+}
+
+function restartGame(){
+
+    clearInterval(timer);
+
+    playerHP = 150;
+    vecnaHP = 5;
+    currentRoll = 0;
+
+    timerStarted = false;
+
+    playerPos = {
+        row:4,
+        col:4
+    };
+
+    document.getElementById(
+        "playerHP"
+    ).innerText = playerHP;
+
+    document.getElementById(
+        "vecnaHP"
+    ).innerText = vecnaHP;
+
+    document.getElementById(
+        "diceValue"
+    ).innerText = "-";
+
+    createBoard();
+}
+
+createBoard();
+
+</script>
+
+</body>
+</html>
