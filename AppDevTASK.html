@@ -177,19 +177,23 @@ function drawBoard(){
 
             const block = board[r][c];
 
-            if(block.exit){
+            // EXIT IS ONLY SHOWN AFTER IT IS UNLOCKED
+            if(block.unlocked){
 
-                cell.classList.add("exit");
-                cell.innerHTML = "EXIT";
+                if(block.exit){
 
-            }
-            else if(block.unlocked){
+                    cell.classList.add("exit");
+                    cell.innerHTML = "EXIT";
 
-                cell.classList.add(block.type);
+                }else{
 
-                if(block.type==="start"){
-                    cell.innerHTML="START";
+                    cell.classList.add(block.type);
+
+                    if(block.type==="start"){
+                        cell.innerHTML="START";
+                    }
                 }
+
             }
             else{
 
