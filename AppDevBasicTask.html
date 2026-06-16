@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Number Game</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #333;
+  }
+  .game-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 400px;
+    text-align: center;
+  }
+  input[type="number"] {
+    width: 80px;
+    padding: 5px;
+    margin: 10px;
+  }
+  button {
+    padding: 8px 16px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+  .results {
+    margin-top: 20px;
+    text-align: left;
+  }
+  .lives {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h1>Number Game</h1>
+
+<div class="game-container">
+  <p>Enter a number between 0 and 100:</p>
+
+  <input type="number" id="userInput" min="0" max="100">
+
+  <button onclick="playRound()">Submit</button>
+
+  <div class="results" id="results"></div>
+
+  <div class="lives" id="lives"></div>
+</div>
+
+<script>
+
+  // --- Game Setup ---
+  let players = [
+    { name: "You", lives: 3, score: 0, alive: true },
+    { name: "Bot A", lives: 3, score: 0, alive: true }
+  ];
+
+  function playRound() {
+
+    let userValue =
+      parseInt(
+        document.getElementById("userInput").value
+      );
+
+    if (
+      isNaN(userValue) ||
+      userValue < 0 ||
+      userValue > 100
+    ) {
+
+      alert(
+        "Please enter a valid number between 0 and 100."
+      );
+
+      return;
+    }
+
+    // Collect choices
+    let choices = [];
+
+    players.forEach(p => {
+
+      if (p.alive) {
+
+        if (p.name === "You") {
+
+          choices.push({
+            player: p,
+            number: userValue
+          });
+
+        } else {
+
+          let botChoice =
+            Math.floor(Math.random() * 101);
+
+          choices.push({
+            player: p,
+            number: botChoice
+          });
+        }
+      }
+    });
+
+    // Calculate average & target
+    let avg =
+      choices.reduce(
+        (sum, c) => sum + c.number,
+        0
+      ) / choices.length;
+
+    let target = avg * 0.8;
+
+    // Find winner
+    let winner =
+      choices.reduce((closest, c) => {
+
+        return Math.abs(
+          c.number - target
+        ) < Math.abs(
+          closest.number - target
+        )
+        ? c
+        : closest;
+
+      });
+
+    winner.player.score++;
+
+    // Lives penalty
+    choices.forEach(c => {
+
+      if (c.player !== winner.player) {
+
+        c.player.lives--;
+
+        if (
+          c.player.lives <= 0
+        ) {
+
+          c.player.alive = false;
+        }
+      }
+    });
+
+    // Display results
+    let resultsDiv =
+      document.getElementById("results");
+
+    resultsDiv.innerHTML = `
+      <h3>Round Results</h3>
+      ${choices.map(c =>
+        `${c.player.name} chose ${c.number}`
+      ).join("<br>")}
+      <br><strong>Target Number:</strong> ${target.toFixed(2)}
+      <br><strong>Winner:</strong> ${winner.player.name}
+    `;
+
+    // Display lives
+    let livesDiv =
+      document.getElementById("lives");
+
+    livesDiv.innerHTML =
+      players.map(p =>
+        `${p.name}: ${
+          p.alive
+          ? p.lives + " lives"
+          : "❌ Eliminated"
+        }`
+      ).join("<br>");
+
+    // End state check
+    if (!players[0].alive) {
+
+      alert(
+        "Game Over! You lost."
+      );
+
+    }
+    else if (
+      players.filter(
+        p => p.alive
+      ).length === 1 &&
+      players[0].alive
+    ) {
+
+      alert(
+        "Victory! You are the last player standing!"
+      );
+    }
+  }
+
+</script>
+
+</body>
+</html>
